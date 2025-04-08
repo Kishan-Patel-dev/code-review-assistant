@@ -1,0 +1,16 @@
+{
+    "id": "55717995-1b1b-4623-8724-fa5fe55a6c8f",
+    "version": "0.0.1",
+    "requiredApiVersion": "^1.44.0",
+    "iconFile": "icon.png",
+    "author": {
+        "name": "Kishan Patel",
+        "homepage": "https://github.com/Kishan-Patel-dev/",
+        "support": "https://github.com/Kishan-Patel-dev/"
+    },
+    "name": "Code Review Assistant",
+    "nameSlug": "code-review-assistant",
+    "classFile": "CodeReviewAssistantApp.ts",
+    "description": "A Rocket.Chat App that will interact with open source maintainers and monitors open pull requests, assigns the most suitable reviewer based on past reviews, persistently reminds them until the review is completed, and leverages AI for initial code assessments.",
+    "implements": []
+}
