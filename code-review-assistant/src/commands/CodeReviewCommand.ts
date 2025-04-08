@@ -40,6 +40,15 @@ export class CodeReviewAssistantCommand implements ISlashCommand {
                     "Hi your rocket app is working"
                 );
                 break;
+            case "help":
+                const helpMessage = `
+Available commands:
+/cr help             → List available commands
+/cr assign           → Force assign reviewers to open PR
+/cr summary <pr>     → Generate review summary (mock)
+                `;
+                await notifyMessage(room, read, user, helpMessage);
+                break;
         }
     }
 }
