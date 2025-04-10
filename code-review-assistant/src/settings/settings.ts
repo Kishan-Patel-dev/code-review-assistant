@@ -24,6 +24,7 @@ export enum AppSettingsEnum {
     REVIEWER_REMINDER_INTERVAL_LABEL = "Reviewer Reminder Interval (hours)",
     LLM_REVIEW_SUMMARY_ENABLED_ID = "llm_review_summary_enabled_id",
     LLM_REVIEW_SUMMARY_ENABLED_LABEL = "Enable LLM Review Summary",
+    LLM_CONTEXT_SUMMARY_ENABLED_ID = "llm_context_summary_enabled_id",
 }
 
 export const settings: ISetting[] = [
@@ -94,6 +95,14 @@ export const settings: ISetting[] = [
     {
         id: AppSettingsEnum.LLM_REVIEW_SUMMARY_ENABLED_ID,
         i18nLabel: AppSettingsEnum.LLM_REVIEW_SUMMARY_ENABLED_LABEL,
+        type: SettingType.BOOLEAN,
+        required: false,
+        public: false,
+        packageValue: true,
+    },
+    {
+        id: AppSettingsEnum.LLM_CONTEXT_SUMMARY_ENABLED_ID,
+        i18nLabel: "Enable LLM Context Summaries",
         type: SettingType.BOOLEAN,
         required: false,
         public: false,

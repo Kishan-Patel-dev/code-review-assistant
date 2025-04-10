@@ -1,6 +1,3 @@
-
-// If we can implement jwt using app engine then we can host the the github app in a app engine 
-
 import * as jwt from "jsonwebtoken";
 import { notifyMessage } from "../helpers/NotifyMessage";
 import { App } from "@rocket.chat/apps-engine/definition/App";
@@ -31,24 +28,28 @@ export class Authentication {
             .getEnvironmentReader()
             .getSettings()
             .getValueById(AppSettingsEnum.GITHUB_APP_ID_ID);
-
+    
         const appPrivateKey = await read
             .getEnvironmentReader()
             .getSettings()
             .getValueById(AppSettingsEnum.GITHUB_APP_PRIVATE_KEY_ID);
-
-        // 1. Fixed JWT generation call
+    
+        const installationId = await read
+            .getEnvironmentReader()
+            .getSettings()
+            .getValueById("github_app_installation_id"); // Add to settings
+    
         const jwtToken = this.generateJWT(appId, appPrivateKey);
-
-        const url = "https://api.github.com/app/access_tokens";
+    
+        const url = `https://api.github.com/app/installations/${installationId}/access_tokens`;
         const response = await http.post(url, {
             headers: {
                 Authorization: `Bearer ${jwtToken}`,
                 Accept: "application/vnd.github+json",
             },
         });
-
-        if (response.statusCode !== 200) {
+    
+        if (response.statusCode !== 201) {
             await notifyMessage(
                 room,
                 read,
@@ -58,8 +59,7 @@ export class Authentication {
             );
             throw new Error(`API error: ${response.statusCode}`);
         }
-
-        // 2. Added response validation
+    
         if (!response.data?.token) {
             await notifyMessage(
                 room,
@@ -70,9 +70,9 @@ export class Authentication {
             );
             throw new Error("No token in GitHub response");
         }
-
+    
         return response.data.token;
-    }
+    }    
 
     public generateJWT(appId: string, appPrivateKey: string) {
         const now = Math.floor(Date.now() / 1000);

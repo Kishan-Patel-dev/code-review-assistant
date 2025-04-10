@@ -12,5 +12,71 @@
     "nameSlug": "code-review-assistant",
     "classFile": "CodeReviewAssistantApp.ts",
     "description": "A Rocket.Chat App that will interact with open source maintainers and monitors open pull requests, assigns the most suitable reviewer based on past reviews, persistently reminds them until the review is completed, and leverages AI for initial code assessments.",
-    "implements": []
+    "implements": [
+        "slashCommands",
+        "webhooks"
+    ],
+    "permissions": [
+        "api",
+        "ui",
+        "http"
+    ],
+    "settings": [
+        {
+            "id": "github_webhook_secret_id",
+            "type": "password",
+            "required": true,
+            "packageValue": "",
+            "public": false,
+            "i18nLabel": "GitHub Webhook Secret"
+        },
+        {
+            "id": "reviewer_reminder_interval_id",
+            "type": "number",
+            "required": true,
+            "packageValue": 24,
+            "public": false,
+            "i18nLabel": "Reviewer Reminder Interval (hours)"
+        },
+        {
+            "id": "llm_review_summary_enabled_id",
+            "type": "boolean",
+            "required": false,
+            "packageValue": true,
+            "public": false,
+            "i18nLabel": "Enable LLM Review Summary"
+        },
+        {
+            "id": "reviewer_scoring_method",
+            "type": "string",
+            "required": false,
+            "packageValue": "expertise",
+            "public": false,
+            "i18nLabel": "Reviewer Scoring Method"
+        },
+        {
+            "id": "github_app_id",
+            "type": "string",
+            "required": true,
+            "packageValue": "",
+            "public": false,
+            "i18nLabel": "GitHub App ID"
+        },
+        {
+            "id": "github_app_private_key",
+            "type": "password",
+            "required": true,
+            "packageValue": "",
+            "public": false,
+            "i18nLabel": "GitHub App Private Key"
+        },
+        {
+            "id": "llm_api_key",
+            "type": "password",
+            "required": false,
+            "packageValue": "",
+            "public": false,
+            "i18nLabel": "LLM API Key"
+        }
+    ]
 }

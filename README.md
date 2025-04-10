@@ -6,8 +6,6 @@
 
 An AI-powered assistant that helps automate and streamline the code review process inside Rocket.Chat by integrating with GitHub. From reviewer assignment to nudges and LLM-based summaries — this app enhances your team’s productivity and ensures smoother collaboration on pull requests.
 
-> 🛠 Part of **GSoC 2025** under [Rocket.Chat](https://rocket.chat) | Project: **"Code Review Assistant for Open Source Projects"**
-
 ---
 
 ## 🎯 Features at a Glance
@@ -23,60 +21,58 @@ An AI-powered assistant that helps automate and streamline the code review proce
 
 ---
 
-## 🔍 Demo Preview
+## 📌 Slash Commands
 
-[📹 Watch a short video demo](#)  
-or  
-![Screenshot](./public/demo.png)
-
----
-
-## 📐 Architecture Overview
-
-> Modular, clean, and extensible Rocket.Chat App following best practices.
-
-```
-+----------------------------+
-|        Rocket.Chat        |
-|        (App Host)         |
-+----------------------------+
-           ↓
-    Slash Commands ("/cr")
-           ↓
-  ┌──────────────────────┐
-  │ GitHubWebhookHandler │ <--- GitHub Webhooks
-  └──────────────────────┘
-           ↓
-  ┌──────────────────────┐
-  │ ReviewerAssignment   │  <-- Scoring Logic
-  └──────────────────────┘
-           ↓
-  ┌──────────────────────┐
-  │ ReviewerReminder     │  <-- Periodic Scheduler
-  └──────────────────────┘
-           ↓
-  ┌──────────────────────┐
-  │ LLMReviewSummary     │  <-- Pluggable AI Layer
-  └──────────────────────┘
-```
+| Command                  | Description                                                                 |
+|--------------------------|-----------------------------------------------------------------------------|
+| `/cr help`               | Lists all available commands                                               |
+| `/cr assign`             | Force assign reviewers to open PR                                          |
+| `/cr summary <PR>`       | Generate a review summary for the given pull request                       |
+| `/cr review-status <PR>` | View the review status for a given pull request                            |
+| `/cr review-config`      | View the current configuration settings (admin-only)                      |
 
 ---
 
-## 📦 Usage Examples
+## 🔗 GitHub Webhook Setup
 
-### 📌 Slash Commands
-```
-/cr help             → List available commands
-/cr assign           → Force assign reviewers to open PR
-/cr summary <pr>     → Generate review summary (mock)
-```
+To enable GitHub integration, configure a webhook in your GitHub repository:
 
-### 📌 GitHub Webhook
-Connect your GitHub repository’s webhook to:
+1. Go to your repository's **Settings** → **Webhooks** → **Add webhook**.
+2. Set the **Payload URL** to:
+   ```
+   https://your.rocketchat/your-app/webhook
+   ```
+3. Choose **application/json** as the content type.
+4. Add the following events:
+   - `pull_request`
+   - `pull_request_review`
+5. Use the **Webhook Secret** from your Rocket.Chat app settings.
+
+---
+
+## 🧠 Summary Generation
+
+The app uses a simulated LLM (Large Language Model) to generate concise summaries of pull requests. The summary includes:
+
+- **Intent**: What the PR aims to do.
+- **Impact**: What parts of the codebase or product it affects.
+- **Scope**: How big or risky the change is (e.g., refactors, new features, bug fixes).
+
+Example prompt used for summary generation:
 ```
-https://your.rocketchat/your-app/webhook
+Summarize the following pull request description and diff context in 2-4 short and precise sentences.
+
+Your summary must include:
+- The **intent** (What the PR aims to do)
+- The **impact** (What parts of the codebase or product it affects)
+- The **scope** (How big or risky the change is, like refactors, new features, bug fixes, etc.)
+
+Pull Request Content: ###
+{pull_request_text}
+###
+
+Summary:
 ```
-Events Supported: `pull_request`, `issue_comment` (future)
 
 ---
 
@@ -96,46 +92,6 @@ Events Supported: `pull_request`, `issue_comment` (future)
 - **Scenario**: A reviewer wants a quick summary of a pull request.
 - **Action**: The app generates a mock AI-based summary of the PR using the `/cr summary <pr>` command.
 - **Outcome**: Provides a concise overview, helping reviewers focus on critical changes.
-
-### 4. Slash Command for Manual Actions
-- **Scenario**: A team member wants to manually assign reviewers or trigger a summary.
-- **Action**: Use the `/cr assign` or `/cr summary <pr>` commands in Rocket.Chat.
-- **Outcome**: Offers flexibility for manual interventions when needed.
-
-### 5. Configurable Settings for Customization
-- **Scenario**: A team wants to adjust the reminder interval or enable/disable AI summaries.
-- **Action**: Modify the settings via the Rocket.Chat app settings panel or `.env` file.
-- **Outcome**: Allows teams to tailor the app to their specific workflows.
-
----
-
-## 📁 Project Structure
-
-```
-/src
-  /models            → Reviewer schema (future)
-  /commands          → Slash command logic
-  /listeners         → GitHub webhook handler
-  /services          → GitHub API, reminders, utilities
-     └ ReviewerAssignment.ts
-     └ ReviewerReminder.ts
-     └ LLMReviewSummary.ts
-  /config            → App-level Rocket.Chat settings
-/tests               → Unit and integration tests
-/public              → Static assets
-/.rcappsconfig       → RC App Config
-```
-
----
-
-## ⚙️ Technologies Used
-
-- **Node.js**, **TypeScript**
-- **Rocket.Chat Apps Engine**
-- **Express.js** (for local testing)
-- **MongoDB** with **Mongoose** (mocked in PoC)
-- **Jest** (unit testing)
-- **dotenv**, **ESLint**, **Prettier**
 
 ---
 
@@ -173,43 +129,13 @@ rc-apps deploy
 
 ---
 
-## 🔧 Configuration & Setup
-
-### 📄 `.env`
-```env
-GITHUB_APP_ID=your_github_app_id
-GITHUB_PRIVATE_KEY=your_private_key
-WEBHOOK_SECRET=your_webhook_secret
-```
-
-
-### 📄 Rocket.Chat Settings Panel
-- `github_webhook_secret`
-- `review_reminder_interval` (minutes)
-- `enable_llm_review_summary` (boolean)
-- `llm_provider_choice` (future use)
-
----
-
-## 🧠 GSoC 2025 Project Goals
-
-This PoC contributes to a broader project proposed to Google Summer of Code 2025:
-
-- 🔁 Automate reviewer workflows based on PR metadata
-- 📡 Use LLMs like CodeLlama or Mistral for in-chat PR summaries
-- 📬 Nudge inactive reviewers through periodic reminders
-- 📊 Build analytics on PR activity per contributor
-- 🔒 Ensure security and secret management via Rocket.Chat settings
-
----
-
 ## 🛡️ Security & Limitations
 
-- Current LLM logic is **simulated for the PoC**; no real inference yet
-- Reviewer scoring is **static** and can be extended
-- Webhook secret verification is enabled but basic
-- GitHub App auth is **not yet production-ready**
-- Secrets should be managed via `.env` or Rocket.Chat settings only
+- Current LLM logic is **simulated for the PoC**; no real inference yet.
+- Reviewer scoring is **static** and can be extended.
+- Webhook secret verification is enabled but basic.
+- GitHub App auth is **not yet production-ready**.
+- Secrets should be managed via `.env` or Rocket.Chat settings only.
 
 ---
 
