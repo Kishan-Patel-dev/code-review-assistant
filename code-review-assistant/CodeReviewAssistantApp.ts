@@ -2,9 +2,9 @@ import {
     IAppAccessors,
     ILogger,
     IConfigurationExtend,
+    IConfigurationModify,
     IHttp,
     IRead,
-    IModify,
     IEnvironmentRead,
 } from "@rocket.chat/apps-engine/definition/accessors";
 import { App } from "@rocket.chat/apps-engine/definition/App";
@@ -27,58 +27,35 @@ export class CodeReviewAssistantApp extends App {
 
     constructor(info: IAppInfo, logger: ILogger, accessors: IAppAccessors) {
         super(info, logger, accessors);
+        const reader: IRead = accessors.reader;
+        const http: IHttp = accessors.http;
+        const placeholderModify = undefined as any;
+        const placeholderPersistence = undefined as any;
 
-        // Initialize components
-        this.webhookHandler = new GitHubWebhookHandler(
-            accessors.reader,
-            accessors.getModifier(),
-            accessors.http,
-            logger
-        );
-        this.reviewerAssignment = new ReviewerAssignment(
-            accessors.reader,
-            accessors.getModifier(),
-            accessors.http
-        );
-        this.reminderScheduler = new ReminderScheduler(
-            accessors.reader,
-            accessors.getModifier(),
-            accessors.persistence,
-            logger
-        );
+        this.webhookHandler = new GitHubWebhookHandler(reader, placeholderModify, http, logger, placeholderPersistence);
+        this.reviewerAssignment = new ReviewerAssignment(reader, placeholderModify, http);
+        this.reminderScheduler = new ReminderScheduler(reader, placeholderModify, placeholderPersistence, logger);
         this.authentication = new Authentication(this);
-        this.llmSummaryModule = new LLMSummaryModule(
-            accessors.reader,
-            "" // Optionally: pass API key here
-        );
+        this.llmSummaryModule = new LLMSummaryModule(reader, ""); // Pass LLM API
     }
 
-    protected async extendConfiguration(
-        configuration: IConfigurationExtend
-    ): Promise<void> {
-        // Register validated settings
+    protected async extendConfiguration(configuration: IConfigurationExtend): Promise<void> {
         const validatedSettings = settings.filter((setting) => setting.required);
-        await Promise.all(
-            validatedSettings.map((setting) =>
-                configuration.settings.provideSetting(setting)
-            )
-        );
-
-        // Register slash commands
+        for (const setting of validatedSettings) {
+            await configuration.settings.provideSetting(setting);
+        }
         configuration.slashCommands.provideSlashCommand(
             new CodeReviewAssistantCommand(this)
         );
     }
 
-    public async onEnable(environment: IEnvironmentRead, modify: IModify): Promise<boolean> {
+    public async onEnable(environment: IEnvironmentRead, configurationModify: IConfigurationModify): Promise<boolean> {
         try {
-            // Validate required settings
             const requiredSettings = [
                 AppSettingsEnum.GITHUB_WEBHOOK_SECRET_ID,
                 AppSettingsEnum.REVIEWER_REMINDER_INTERVAL_ID,
                 AppSettingsEnum.LLM_REVIEW_SUMMARY_ENABLED_ID,
             ];
-
             for (const setting of requiredSettings) {
                 const value = await environment.getSettings().getValueById(setting);
                 if (!value) {
@@ -86,7 +63,6 @@ export class CodeReviewAssistantApp extends App {
                     return false;
                 }
             }
-
             this.getLogger().info("All required settings are valid.");
             return true;
         } catch (error) {

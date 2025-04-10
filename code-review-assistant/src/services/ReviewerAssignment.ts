@@ -1,5 +1,5 @@
 import { IHttp, IRead, IModify } from "@rocket.chat/apps-engine/definition/accessors";
-import { ReviewerScoringFactory } from "../reviewers/ReviewerEngine";
+import { ReviewerScoringFactory } from "../reviewers/ReviewerEngine"; // Correct import
 
 export class ReviewerAssignment {
     constructor(
@@ -22,7 +22,6 @@ export class ReviewerAssignment {
             { id: "reviewer3", metrics: { expertise: 90, prActivity: 60, quality: 80, responseTime: 8, activeReviews: 1 } },
         ];
 
-        // Select scoring strategy (e.g., expertise)
         const scoringStrategy = await this.read
             .getEnvironmentReader()
             .getSettings()
@@ -30,12 +29,10 @@ export class ReviewerAssignment {
 
         const reviewerEngine = ReviewerScoringFactory.getStrategy(scoringStrategy || "expertise");
 
-        // Calculate the best reviewer
-        const bestReviewer = reviewerEngine.assignReviewer(reviewers);
+        const bestReviewer = reviewerEngine.assignReviewer(reviewers, []);
 
         if (bestReviewer) {
             console.log(`Best reviewer selected: ${bestReviewer}`);
-            // Simulate assigning the reviewer (e.g., call GitHub API)
             await this.http.post(`https://api.github.com/repos/${repo}/pulls/${prNumber}/requested_reviewers`, {
                 headers: {
                     Authorization: `Bearer <your-github-token>`,

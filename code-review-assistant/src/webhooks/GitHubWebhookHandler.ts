@@ -1,4 +1,4 @@
-import { IHttp, IRead, IModify, ILogger } from "@rocket.chat/apps-engine/definition/accessors";
+import { IHttp, IRead, IModify, ILogger, IPersistence } from "@rocket.chat/apps-engine/definition/accessors";
 import { IRoom } from "@rocket.chat/apps-engine/definition/rooms";
 import { IUser } from "@rocket.chat/apps-engine/definition/users";
 import { validateGitHubSignature } from "../helpers/GitHubUtils";
@@ -12,7 +12,8 @@ export class GitHubWebhookHandler {
         private readonly read: IRead,
         private readonly modify: IModify,
         private readonly http: IHttp,
-        private readonly logger: ILogger
+        private readonly logger: ILogger,
+        private readonly persistence: IPersistence
     ) {}
 
     /**
@@ -78,9 +79,10 @@ export class GitHubWebhookHandler {
                 user,
                 `New PR ${action === "opened" ? "Opened" : "Reopened"}\nTitle: ${prTitle}\nURL: ${prUrl}`
             );
-            await ReviewerAssignment.assign(repo, prNumber, author, this.read, this.modify, this.http);
+            const reviewerAssignment = new ReviewerAssignment(this.read, this.modify, this.http);
+            await reviewerAssignment.assign(repo, prNumber, author);
 
-            const reminderScheduler = new ReminderScheduler(this.read, this.modify, this.http, this.logger);
+            const reminderScheduler = new ReminderScheduler(this.read, this.modify, this.persistence, this.logger);
             await reminderScheduler.scheduleReminder(author, prUrl, room, user);
         } else if (action === "review_requested") {
             await notifyMessage(
@@ -124,7 +126,7 @@ export class GitHubWebhookHandler {
                 `Review submitted for PR: ${prTitle}\nURL: ${prUrl}`
             );
 
-            const reminderScheduler = new ReminderScheduler(this.read, this.modify, this.http, this.logger);
+            const reminderScheduler = new ReminderScheduler(this.read, this.modify, this.persistence, this.logger);
             await reminderScheduler.cancelReminder(payload.pull_request.user.login, prUrl);
 
             const llmSummaryModule = new LLMSummaryModule(this.read);

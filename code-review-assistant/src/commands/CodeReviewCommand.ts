@@ -15,6 +15,7 @@ import { notifyMessage } from "../helpers/NotifyMessage";
 import { ReminderScheduler } from "../reminders/ReminderScheduler";
 import { AppSettingsEnum } from "../settings/settings";
 import { LLMSummaryModule } from "../summary/LLMSummaryModule"; // Standardized name
+import { RocketChatAssociationRecord, RocketChatAssociationModel } from "@rocket.chat/apps-engine/definition/metadata";
 
 export class CodeReviewAssistantCommand implements ISlashCommand {
     public command = "cr";
@@ -84,22 +85,23 @@ Available commands:
                     return;
                 }
 
-                // Simulate fetching review status
-                const reminderKey = `reminder_${user.username}_${prId}`;
-                const reminderData = await persis.readById(reminderKey);
+                const getReminderKey = (username: string, prId: string) => `reminder_${username}_${prId}`;
+                const reminderKey = getReminderKey(user.username, prId);
+                const assoc = new RocketChatAssociationRecord(RocketChatAssociationModel.MISC, reminderKey);
+                const persistenceReader = read.getPersistenceReader();
+                const reminderData = await persistenceReader.readByAssociation(assoc);
 
-                const reviewStatus = reminderData
-                    ? `Status for PR ${prId}: Assigned Reviewer - [ReviewerName]. Last reminder sent at ${new Date(
-                          reminderData.timestamp
-                      ).toLocaleString()}.`
+                const reviewStatus = reminderData.length > 0
+                    ? `Status for PR ${prId}: Assigned Reviewer - [ReviewerName]. Last reminder sent at ${new Date((
+                        reminderData[0] as { timestamp: number })
+                        .timestamp).toLocaleString()}.`
                     : `Status for PR ${prId}: No reminders sent yet.`;
 
                 await notifyMessage(room, read, user, reviewStatus, threadId);
                 break;
 
             case "review-config":
-                // Check if the user is an admin
-                const isAdmin = await read.getUserReader().isUserAdmin(user);
+                const isAdmin = user.roles?.includes("admin"); // Check roles for admin
                 if (!isAdmin) {
                     await notifyMessage(
                         room,

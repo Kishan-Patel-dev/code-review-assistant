@@ -9,7 +9,7 @@ export class LLMSummaryModule {
             return "LLM integration is disabled. Enable it in the app settings to use this feature.";
         }
 
-        const prompt = createPRSummaryPrompt(prData);
+        const prompt = createPRSummaryPrompt(JSON.stringify(prData));
 
         try {
             if (this.apiKey) {

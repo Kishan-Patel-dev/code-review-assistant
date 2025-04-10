@@ -18,5 +18,5 @@ Summary:
 `;
 
 export function createPRSummaryPrompt(pullRequestText: string): string {
-	return PR_SUMMARY_PROMPT.replace('{pull_request_text}', pullRequestText);
+	return PR_SUMMARY_PROMPT.replace("{pull_request_text}", pullRequestText || "No description provided.");
 }

@@ -6,14 +6,14 @@ import { notifyMessage } from "../helpers/NotifyMessage";
 import { getReminderKey, isReminderActive, saveReminder, removeReminder } from "../helpers/ReminderUtils";
 
 export class ReminderScheduler {
-    private reminderInterval: number = 3600000; // Default to 1 hour in milliseconds
-
     constructor(
         private readonly read: IRead,
         private readonly modify: IModify,
         private readonly persistence: IPersistence,
         private readonly logger: ILogger
     ) {}
+
+    private reminderInterval: number = 3600000; // Default to 1 hour in milliseconds
 
     public async scheduleReminder(reviewerId: string, prUrl: string, room: IRoom, user: IUser): Promise<void> {
         const intervalSetting = await this.read
@@ -24,7 +24,7 @@ export class ReminderScheduler {
         this.reminderInterval = intervalSetting * 3600000;
 
         const reminderKey = getReminderKey(reviewerId, prUrl);
-        if (await isReminderActive(reminderKey, this.persistence)) {
+        if (await isReminderActive(reminderKey, this.read.getPersistenceReader())) {
             this.logger.info(`[Reminder] Reminder already scheduled for reviewer: ${reviewerId}, PR: ${prUrl}`);
             return;
         }
@@ -43,7 +43,7 @@ export class ReminderScheduler {
     public async cancelReminder(reviewerId: string, prUrl: string): Promise<void> {
         const reminderKey = getReminderKey(reviewerId, prUrl);
         this.logger.info(`[Reminder] Cancelling reminder for reviewer: ${reviewerId}, PR: ${prUrl}`);
-        await removeReminder(reminderKey, this.persistence);
+        await removeReminder(reminderKey, this.persistence); // ✅ FIXED: Using write persistence
 
         const jobId = `reminder_${reviewerId}_${prUrl}`;
         await this.modify.getScheduler().cancelJob(jobId);
@@ -61,7 +61,7 @@ export class ReminderScheduler {
         }
 
         const reminderKey = getReminderKey(reviewerId, prUrl);
-        if (!(await isReminderActive(reminderKey, this.persistence))) {
+        if (!(await isReminderActive(reminderKey, this.read.getPersistenceReader()))) {
             this.logger.info(`[Reminder] Reminder cancelled for reviewer: ${reviewerId}, PR: ${prUrl}`);
             return;
         }
