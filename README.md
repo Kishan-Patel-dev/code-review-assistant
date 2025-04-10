@@ -28,8 +28,9 @@ An AI-powered assistant that helps automate and streamline the code review proce
 | `/cr help`               | Lists all available commands                                               |
 | `/cr assign`             | Force assign reviewers to open PR                                          |
 | `/cr summary <PR>`       | Generate a review summary for the given pull request                       |
-| `/cr review-status <PR>` | View the review status for a given pull request                            |
+| `/cr review-status <PR>` | View the review reminder status for a given pull request                   |
 | `/cr review-config`      | View the current configuration settings (admin-only)                      |
+| `/cr initialize`         | Manually initialize app dependencies                                      |
 
 ---
 
@@ -93,6 +94,11 @@ Summary:
 - **Action**: The app generates a mock AI-based summary of the PR using the `/cr summary <pr>` command.
 - **Outcome**: Provides a concise overview, helping reviewers focus on critical changes.
 
+### 4. Manual Initialization
+- **Scenario**: The app's dependencies need to be re-initialized after a configuration change.
+- **Action**: Use the `/cr initialize` command to manually initialize the app's modules.
+- **Outcome**: Ensures the app is ready to handle requests with the latest configuration.
+
 ---
 
 ## 🛠️ Installation & Setup
@@ -126,6 +132,12 @@ Deploy the app to your Rocket.Chat instance:
 ```bash
 rc-apps deploy
 ```
+
+---
+
+## 🛠️ Development Notes
+
+The app uses Rocket.Chat’s best practices for runtime dependency injection. Services like `IModify`, `IPersistence`, etc., are injected only during runtime (e.g., `onEnable`, slash commands) and are not used directly in constructors. This ensures compliance with the Rocket.Chat Apps-Engine standards and improves maintainability.
 
 ---
 
